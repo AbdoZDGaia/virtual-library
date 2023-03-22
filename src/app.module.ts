@@ -16,5 +16,6 @@ import { UserModule } from './user/user.module';
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
   controllers: [ BookController, UserController],
+  providers:[],
 })
 export class AppModule { }

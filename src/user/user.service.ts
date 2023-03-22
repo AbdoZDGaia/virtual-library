@@ -50,22 +50,27 @@ export class UserService {
 
     async reserveBook(userId: string, bookId: string) {
         this.checkValidBookId(bookId);
-        const book = await this.checkBookExists(bookId);
+        const book = await this.bookService.findOne(bookId);
         const userToBeUpdated = await this.userModel.findById(userId);
-        const alreadyReserved = this.getAlreadyReservedForUser(userToBeUpdated, book);
+        const alreadyReserved = this.isAlreadyReservedForUser(userToBeUpdated, book);
+        console.log(alreadyReserved)
         if (alreadyReserved) {
             throw new BadRequestException('This user has already reserved this book');
         }
-        userToBeUpdated.reservedBooks.push({ bookName: book.name, reservationDate: new Date() });
-        await this.userModel.findByIdAndUpdate(userId, { $set: userToBeUpdated })
+        else {
+            await this.bookService.reserve(book);
+            userToBeUpdated.reservedBooks.push({ bookName: book.name, reservationDate: new Date() });
+            await this.userModel.findByIdAndUpdate(userId, { $set: userToBeUpdated })
+        }
     }
 
     async returnBook(userId: string, bookId: string) {
         this.checkValidBookId(bookId);
-        const book = await this.checkBookExists(bookId);
+        const book = await this.bookService.findOne(bookId);
         const userToBeUpdated = await this.userModel.findById(userId);
         userToBeUpdated.reservedBooks = userToBeUpdated.reservedBooks.filter(obj =>
             obj.bookName !== book.name);
+        await this.bookService.return(book);
         await this.userModel.findByIdAndUpdate(userId, { $set: userToBeUpdated })
     }
 
@@ -79,8 +84,8 @@ export class UserService {
             {
                 $match: {
                     'reservedBooks.reservationDate': {
-                        $gte: queryDto.start?new Date(queryDto.start):new Date(),
-                        $lte: queryDto.end?new Date(queryDto.end):new Date(),
+                        $gte: queryDto.start ? new Date(queryDto.start) : new Date(),
+                        $lte: queryDto.end ? new Date(queryDto.end) : new Date(),
                     },
                 },
             },
@@ -96,24 +101,20 @@ export class UserService {
         return result;
     }
 
-    private getAlreadyReservedForUser(userToBeUpdated: User, book: Book) {
-        const alreadyReserved = userToBeUpdated.reservedBooks.find((obj) => {
-            return obj.bookName === book.name;
-        });
-        return alreadyReserved
+    private isAlreadyReservedForUser(userToBeUpdated: User, book: Book) {
+        if (userToBeUpdated.reservedBooks.length > 0) {
+            const alreadyReserved = userToBeUpdated.reservedBooks.find((obj) => {
+                return obj.bookName === book.name;
+            });
+            if (alreadyReserved)
+                return true
+        }
+        return false
     }
 
     private checkValidBookId(bookId: string) {
         if (!bookId.match(/^[0-9a-fA-F]{24}$/)) {
             throw new BadRequestException('Invalid Book Id');
         }
-    }
-
-    private async checkBookExists(bookId: string) {
-        const book = await this.bookService.findOne(bookId);
-        if (!book) {
-            throw new NotFoundException(`The book with Id:${bookId} was not found`);
-        }
-        return book;
     }
 }

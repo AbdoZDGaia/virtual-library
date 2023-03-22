@@ -14,7 +14,7 @@ import { UserService } from './user.service';
             [
                 { name: User.name, schema: UserSchema },
             ]),
-        PassportModule,
+        PassportModule.register({ defaultStrategy: 'jwt' }),
         JwtModule.register({
             secret: 'abdelrahmanssecret',
             signOptions: { expiresIn: '1h' },
@@ -23,6 +23,6 @@ import { UserService } from './user.service';
     ],
     controllers: [UserController],
     providers: [UserService, JwtStrategy],
-    exports: [UserService],
+    exports: [UserService,PassportModule.register({ defaultStrategy: 'jwt' })],
 })
 export class UserModule { }

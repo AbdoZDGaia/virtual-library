@@ -25,29 +25,43 @@ export class BookService {
     }
 
     async findOne(id: string): Promise<Book> {
-        return this.bookModel.findById(id).exec();
+        const book = (await this.bookModel.find({ id: id }).exec()).at(0);
+        if (!book) {
+            throw new NotFoundException(`The book with Id:${id} was not found`);
+        }
+        return book;
     }
 
     async update(id: string, book: UpdateBookDto): Promise<Book> {
         const bookBeforeUpdate = await this.findOne(id);
         if (!bookBeforeUpdate)
             throw new NotFoundException('No such record was found');
-        await this.checkSoftDeletedById(id);
         const result = await this.bookModel.findByIdAndUpdate(id, book, { new: true }).exec();
         await this.auditBookUpdate(bookBeforeUpdate);
         return result;
     }
 
-    async remove(id: string): Promise<any> {
+    async remove(id: string) {
         const filter = { _id: id };
         const deletedBook = await this.findOne(id);
         const deleted = await this.bookModel.softDelete(filter);
-
-        if (deleted.deleted === 0) {
-            throw new BadRequestException('Already deleted')
-        }
         this.auditBookDelete(id, deletedBook);
         return deleted;
+    }
+
+    async reserve(book: Book) {
+        if (book.quantity > 0) {
+            book.quantity--;
+            this.update(book.id, book);
+        }
+        else {
+            throw new BadRequestException('Could not reserve this book, fully reserved')
+        }
+    }
+
+    async return(book: Book) {
+        book.quantity++;
+        this.update(book.id, book);
     }
 
     private auditBookDelete(id: string, deletedBook: Book) {
@@ -69,19 +83,8 @@ export class BookService {
         await updateLogForBookDocument.save();
     }
 
-    private async checkSoftDeletedById(id: string) {
-        const deletedBooks = await this.bookModel.findDeleted();
-        const found = deletedBooks.find((obj) => {
-            return obj.id === id;
-        });
-        if (found) {
-            throw new BadRequestException('Already deleted');
-        }
-    }
-
     private async chekForDuplicateName(bookName: string) {
-        const foundName = await this.bookModel.findOne({name:bookName});
-        console.log(foundName);
+        const foundName = await this.bookModel.findOne({ name: bookName });
         if (foundName) {
             throw new BadRequestException('Duplicate book name');
         }
