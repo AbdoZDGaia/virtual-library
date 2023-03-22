@@ -1,18 +1,25 @@
+import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { Transform } from "class-transformer";
-import { IsDateString, IsOptional, IsPositive } from "class-validator";
+import { IsOptional, IsPositive } from "class-validator";
 
 export class PaginationQueryDto {
+    @ApiPropertyOptional()
     @IsOptional()
     @IsPositive()
     limit?: number;
 
+    @ApiPropertyOptional()
     @IsOptional()
     @IsPositive()
     offset?: number;
 
+    @ApiPropertyOptional()
     @IsOptional()
     keyword?: string;
 
+    @ApiPropertyOptional({
+        description: 'Start date / ex: 30-01-2020'
+      })
     @IsOptional()
     @Transform(({ value }) => {
         const [day, month, year] = value.split('-');
@@ -20,6 +27,9 @@ export class PaginationQueryDto {
     })
     start?: string;
 
+    @ApiPropertyOptional({
+        description: 'End date / ex: 30-01-2020'
+      })
     @IsOptional()
     @Transform(({ value }) => {
         const [day, month, year] = value.split('-');

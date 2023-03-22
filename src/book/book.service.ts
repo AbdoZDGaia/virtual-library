@@ -80,7 +80,7 @@ export class BookService {
     }
 
     private async chekForDuplicateName(bookName: string) {
-        const foundName = await this.bookModel.find({ name: bookName });
+        const foundName = await this.bookModel.findOne({name:bookName});
         console.log(foundName);
         if (foundName) {
             throw new BadRequestException('Duplicate book name');
