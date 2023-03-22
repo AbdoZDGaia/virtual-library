@@ -5,14 +5,13 @@ import { UserController } from './user/user.controller';
 import { PassportModule } from '@nestjs/passport';
 import { BookModule } from './book/book.module';
 import { UserModule } from './user/user.module';
+import { mongooseConfig } from 'mongoose-config';
 
 @Module({
   imports: [
     BookModule,
     UserModule,
-    MongooseModule.forRoot('mongodb://localhost:27017/virtual-library-db', {
-      autoIndex: false,
-    }),
+    mongooseConfig,
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
   controllers: [ BookController, UserController],
