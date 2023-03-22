@@ -4,8 +4,7 @@ Virtual Library API with Swagger documentation
 
 ## Functionalities included
 - Mongoose is used for data access
-- JWT is used for authentication
-- Passport strategies + Auth guards for authorization
+- Passport JWT strategies + AuthGuards for AuthN and AuthZ
 - Soft-delete is implemented globally
 - Auditing updated and deleted books is implemented
 
