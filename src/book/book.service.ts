@@ -25,11 +25,12 @@ export class BookService {
     }
 
     async findOne(id: string): Promise<Book> {
-        const book = (await this.bookModel.find({ id: id }).exec()).at(0);
-        if (!book) {
+        const book = await this.bookModel.find({ _id: id }).exec();
+        console.log(book)
+        if (book.length <= 0) {
             throw new NotFoundException(`The book with Id:${id} was not found`);
-        }
-        return book;
+        } 
+        return book[0];
     }
 
     async update(id: string, book: UpdateBookDto): Promise<Book> {

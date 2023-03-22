@@ -50,10 +50,9 @@ export class UserService {
 
     async reserveBook(userId: string, bookId: string) {
         this.checkValidBookId(bookId);
-        const book = await this.bookService.findOne(bookId);
+        const  book = await this.bookService.findOne(bookId);
         const userToBeUpdated = await this.userModel.findById(userId);
         const alreadyReserved = this.isAlreadyReservedForUser(userToBeUpdated, book);
-        console.log(alreadyReserved)
         if (alreadyReserved) {
             throw new BadRequestException('This user has already reserved this book');
         }
@@ -108,6 +107,7 @@ export class UserService {
             });
             if (alreadyReserved)
                 return true
+            return false
         }
         return false
     }
